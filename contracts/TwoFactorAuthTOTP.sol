@@ -36,7 +36,7 @@ contract TwoFactorAuthTOTP {
         require(_totpWalletAddress != address(0), "Invalid TOTPWallet address");
         require(_twoFactorAuthAddress != address(0), "Invalid TwoFactorAuth address");
 
-        totpWallet = TOTPWallet(_totpWalletAddress);
+        totpWallet = TOTPWallet(payable(_totpWalletAddress));
         twoFactorAuth = TwoFactorAuth(_twoFactorAuthAddress);
     }
 
@@ -54,7 +54,7 @@ contract TwoFactorAuthTOTP {
         uint32 otp = uint32(pseudoRandom);
 
         // Encrypt the OTP using FHE
-        bytes memory encryptedOTP = FHE.asEuint32(otp).serialize();
+        bytes memory encryptedOTP = FHE.inEuint32(otp).data;
 
         // Store the encrypted OTP
         encryptedOTPs[msg.sender] = encryptedOTP;
