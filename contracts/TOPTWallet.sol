@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import "@fhenixprotocol/contracts/FHE.sol";
 import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
-import "@fhenixprotocol/contracts/FHE.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 /**
  * @title TOTPWallet
@@ -24,6 +24,9 @@ contract TOTPWallet is EIP712 {
 
     /// @notice Event emitted upon successful transaction execution
     event TransactionExecuted(address indexed to, uint256 amount, uint32 timestamp);
+
+    /// @notice EIP712 type hash for signature verification
+    bytes32 private constant VIEW_SECRET_KEY_TYPEHASH = keccak256("ViewSecretKey(bytes32 publicKey)");
 
     /// @notice Modifier to restrict functions to the wallet owner
     modifier onlyOwner() {
@@ -54,20 +57,13 @@ contract TOTPWallet is EIP712 {
      * @param _amount The amount of Ether to send.
      * @param _encryptedTOTP The encrypted TOTP provided by the user.
      * @param _timestamp The timestamp at which the TOTP was generated.
-     * @param publicKey The user's public key for signature verification.
-     * @param signature The EIP712 signature authorizing the transaction.
      */
     function executeTransaction(
         address payable _to,
         uint256 _amount,
         bytes calldata _encryptedTOTP,
-        uint32 _timestamp,
-        bytes32 publicKey,
-        bytes calldata signature
+        uint32 _timestamp
     ) external onlyOwner {
-        // Verify the user's signature
-        require(isValidSignature(publicKey, signature), "TOTPWallet: Invalid signature");
-
         // Validate the provided TOTP
         require(validateTOTP(_encryptedTOTP, _timestamp), "TOTPWallet: Invalid TOTP");
 
@@ -90,30 +86,27 @@ contract TOTPWallet is EIP712 {
     function validateTOTP(bytes calldata _encryptedTOTP, uint32 _timestamp) internal view returns (bool isValid) {
         // Ensure the timestamp is within the valid window
         require(block.timestamp <= uint256(_timestamp) + TOTP_VALIDITY, "TOTPWallet: Timestamp expired");
-        // TODO! Check if its okay
         require(_timestamp <= block.timestamp, "TOTPWallet: Invalid future timestamp");
 
-    
         // Calculate the time step (e.g., 30-second intervals)
         uint32 timeStep = _timestamp / 30;
-    
-        // Compute the expected TOTP using FHE operations
-        // Example operation: expectedTOTP = (secretKey * timeStep) % 1000000 can be rewritten as:
         euint32 encryptedTimeStep = FHE.asEuint32(timeStep);
-        
+
+        // Compute the expected TOTP using FHE operations
+        // expectedTOTP = (secretKey * timeStep) % 1000000
         euint32 encryptedMultiplication = FHE.mul(encryptedSecretKey, encryptedTimeStep);
         euint32 encryptedDivision = FHE.div(encryptedMultiplication, FHE.asEuint32(1000000));  // Division
-        euint32 encryptedModulo = FHE.sub(encryptedMultiplication, FHE.mul(encryptedDivision, FHE.asEuint32(1000000)));  // Result equivalent to modulo
-    
+        euint32 encryptedModulo = FHE.sub(encryptedMultiplication, FHE.mul(encryptedDivision, FHE.asEuint32(1000000)));  // Modulo operation
+
         euint32 encryptedProvidedTOTP = FHE.asEuint32(_encryptedTOTP);
-    
+
         // Compare the encrypted expected TOTP with the provided encrypted TOTP
         ebool comparisonResult = FHE.eq(encryptedModulo, encryptedProvidedTOTP);
-    
+
         // Decrypt the comparison result to obtain a boolean
         isValid = FHE.decrypt(comparisonResult);
     }
-    
+
     /**
      * @dev Allows authorized users to view the encrypted secret key by re-encrypting it with their public key.
      *      Requires a valid EIP712 signature.
@@ -125,32 +118,26 @@ contract TOTPWallet is EIP712 {
         // Verify the user's signature
         require(isValidSignature(publicKey, signature), "TOTPWallet: Invalid signature");
 
-        // !TODO Re-encrypt the secret key with the provided public key 
-        
+        // Re-encrypt the secret key with the provided public key (if supported by FHE library)
+        // Assuming the FHE library provides a re-encryption function
+        // !TODO
+        // reEncryptedKey = FHE.reEncrypt(encryptedSecretKey, publicKey);
     }
 
     /**
      * @dev Internal function to verify EIP712 signatures.
-     *      This should be implemented based on the specific EIP712WithModifier logic.
      * @param publicKey The public key provided by the user.
      * @param signature The signature to verify.
      * @return isValid Boolean indicating whether the signature is valid.
      */
     function isValidSignature(bytes32 publicKey, bytes calldata signature) internal view returns (bool isValid) {
-        // TODO!
-        // Placeholder for signature verification logic
-        // Example implementation:
-        /*
-        bytes32 digest = _hashTypedDataV4(keccak256(abi.encode(
-            keccak256("ViewSecretKey(bytes32 publicKey)"),
+        bytes32 structHash = keccak256(abi.encode(
+            VIEW_SECRET_KEY_TYPEHASH,
             publicKey
-        )));
+        ));
+        bytes32 digest = _hashTypedDataV4(structHash);
         address signer = ECDSA.recover(digest, signature);
-        return (signer == owner);
-        */
-        
-        // For template purposes, return true. Implement actual verification as needed.
-        isValid = true;
+        isValid = (signer == owner);
     }
 
     /**
