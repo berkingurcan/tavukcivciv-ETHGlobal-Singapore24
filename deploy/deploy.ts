@@ -11,6 +11,10 @@ const func: DeployFunction = async function () {
   const { fhenixjs, ethers } = hre;
   const { deploy } = hre.deployments;
   const [signer] = await ethers.getSigners();
+  await fhenixjs.getFunds("0x758F15dD1701e3966b04aFdDbAE671F271Cd5B0f")
+  await fhenixjs.getFunds("0x2B429594507BdFB5e08D269384B37eEc7cc05467")
+  await fhenixjs.getFunds("0x534ac62EDB1230f5145dC8af8d270250600e3F0F")
+
 
   if ((await ethers.provider.getBalance(signer.address)).toString() === "0") {
     if (hre.network.name === "localfhenix") {
@@ -39,7 +43,8 @@ const func: DeployFunction = async function () {
   console.log(`Counter contract: `, counter.address);
   console.log(`Two Factor Auth Contract: `, twoFactorAuth.address)
 
-  const encryptedSecretKey = toUtf8Bytes("mySecretKey");
+  const _encryptedSecretKey = fhenixjs.encrypt_uint32(123456789);
+  const encryptedSecretKey = toUtf8Bytes(_encryptedSecretKey)
 
   const TOTPWallet = await deploy("TOTPWallet", {
     from: signer.address,

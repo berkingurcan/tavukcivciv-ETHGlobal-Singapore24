@@ -2,28 +2,31 @@
 import { useState, useEffect } from "react";
 import styles from "../styles/Wallet.module.css";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useAccount, useSigner } from "wagmi"; // Using wagmi hooks for account and signer
-import { FhenixClient } from 'fhenixjs';
+import { FhenixClient, fhenixjs } from 'fhenixjs';
 import { ethers } from "ethers";
 import TOPTWallet from "../../../artifacts/contracts/TOTPWallet.sol/TOTPWallet.json"
 
-import { toUtf8Bytes } from "ethers"
+import { toUtf8Bytes, parseEther,  } from "ethers"
 
 const TOTPWalletABI = TOPTWallet.abi
+const TOPTWalletByteCode = TOPTWallet.bytecode
 
 export default function Wallet() {
-
-    const { userAddress, isConnected } = useAccount();
-    const { data: signer } = useSigner();
   const [account, setAccount] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [timestamp, setTimestamp] = useState<string>("0");
   const [address, setAddress] = useState<string>("0x");
   const [value, setValue] = useState<string>("0");
   const [secretKey, setSecretKey] = useState<string>("");
   const [otp, setOtp] = useState<string>("");
+  const [walletContractAddress, setWalletContractAddress] = useState<string>("");
 
   const handleValue = (event: any) => {
     setValue(event.target.value);
+  };
+
+  const handleTimestamp = (event: any) => {
+    setTimestamp(event.target.value);
   };
 
   const handleAddressChange = (event: any) => {
@@ -38,13 +41,34 @@ export default function Wallet() {
     setOtp(event.target.value);
   };
 
-  function deployWallet() {
-    const encryptedSecretKey = toUtf8Bytes(secretKey);
+  async function deployWallet() {
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const factory = new ethers.ContractFactory(TOTPWalletABI, TOPTWalletByteCode, signer);
+    // const fhenixClient = new FhenixClient({ provider });
+    console.log('FhenixClient initialized');
 
+    const encryptedSecretKey = toUtf8Bytes(secretKey);
+    console.log(encryptedSecretKey)
+    const contract = await factory.deploy(encryptedSecretKey);
+    console.log(contract)
+    setWalletContractAddress((await contract.getAddress()).toString())
+    console.log('Contract instance created: ', await contract.getAddress());
   }
 
-  function sendTransaction() {
-    return
+  async function sendTransaction() {
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    await provider.send("eth_requestAccounts", []);
+    const contract = new ethers.Contract(walletContractAddress, TOTPWalletABI, signer);
+
+
+    const tx = await contract.executeTransaction(
+        address,
+        parseEther(value),
+        otp,
+        timestamp
+    );
   }
 
   function submitOtp() {
@@ -103,6 +127,13 @@ export default function Wallet() {
           className={styles.inputField}
           value={otp}
           onChange={handleOtpChange}
+        />
+        <input
+          type="text"
+          placeholder="Enter Timestamp"
+          className={styles.inputField}
+          value={timestamp}
+          onChange={handleTimestamp}
         />
         <button
           className={`${styles.button} ${styles.otpButton}`}
