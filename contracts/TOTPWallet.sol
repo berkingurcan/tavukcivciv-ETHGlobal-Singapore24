@@ -52,6 +52,20 @@ contract TOTPWallet is EIP712 {
     }
 
     /**
+     * @dev Returns the encrypted secret key.
+     * @return The encrypted secret key as bytes.
+    */
+    function getEncryptedSecretKey() external view returns (bytes memory) {
+        // Convert euint32 to bytes
+        bytes memory gotEncryptedSecretKey = new bytes(4); // uint32 takes 4 bytes
+
+        assembly {
+            mstore(add(gotEncryptedSecretKey, 32), sload(encryptedSecretKey.slot))
+        }
+        return gotEncryptedSecretKey;
+    }
+
+    /**
      * @dev Executes a transaction to a specified address after validating the provided TOTP.
      * @param _to The recipient address.
      * @param _amount The amount of Ether to send.

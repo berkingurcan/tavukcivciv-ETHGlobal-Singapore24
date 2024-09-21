@@ -40,32 +40,47 @@ contract TwoFactorAuthTOTP {
         twoFactorAuth = TwoFactorAuth(_twoFactorAuthAddress);
     }
 
-    /**
-     * @dev Generates a 4-digit OTP using pseudo-randomness and encrypts it using FHE.
+/**
+     * @dev Generates an encrypted OTP using the same algorithm as TOTPWallet's validateTOTP function.
      * @notice This function should be called by the user who wants to log in.
      */
     function generateEncryptedOTP() external {
-        // Ensure the user is registered in TwoFactorAuth
-        (address primaryAddress, , , , , ) = twoFactorAuth.users(msg.sender);
-        require(primaryAddress != address(0), "User not registered in TwoFactorAuth");
+        // Get the encrypted secret key from TOTPWallet
+        bytes memory encryptedSecretKeyBytes = totpWallet.getEncryptedSecretKey();
+        euint32 encryptedSecretKey = FHE.asEuint32(encryptedSecretKeyBytes);
 
-        // Generate a pseudo-random 4-digit OTP
-        uint256 pseudoRandom = uint256(keccak256(abi.encodePacked(block.timestamp, msg.sender))) % 10000;
-        uint32 otp = uint32(pseudoRandom);
+        // Get the current timestamp
+        uint32 timestamp = uint32(block.timestamp);
 
-        // Encrypt the OTP using FHE
+        // Calculate the time step (e.g., 300-second intervals)
+        uint32 timeStep = timestamp / 300;
+        euint32 encryptedTimeStep = FHE.asEuint32(timeStep);
+
+        // Compute the encrypted TOTP
+        // encryptedMultiplication = encryptedSecretKey * encryptedTimeStep
+        euint32 encryptedMultiplication = FHE.mul(encryptedSecretKey, encryptedTimeStep);
+
+        // encryptedDivision = encryptedMultiplication / 1000000
+        euint32 encryptedDivision = FHE.div(encryptedMultiplication, FHE.asEuint32(1000000));
+
+        // encryptedModulo = encryptedMultiplication - (encryptedDivision * 1000000)
+        euint32 encryptedModulo = FHE.sub(
+            encryptedMultiplication,
+            FHE.mul(encryptedDivision, FHE.asEuint32(1000000))
+        );
+
         bytes memory encryptedOTP = new bytes(4); // uint32 takes 4 bytes
 
-        assembly {
-            mstore(add(encryptedOTP, 32), otp)
-        }
 
-        // Store the encrypted OTP
+        assembly {
+            mstore(add(encryptedOTP, 32), encryptedModulo)
+        }
         encryptedOTPs[msg.sender] = encryptedOTP;
 
         // Emit event
-        emit OTPGenerated(msg.sender, uint32(block.timestamp));
+        emit OTPGenerated(msg.sender, timestamp);
     }
+
 
     /**
      * @dev Sends the encrypted OTP to the TOTPWallet contract for verification.
