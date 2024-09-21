@@ -27,7 +27,7 @@
 
 This project implements a decentralized two-factor authentication (2FA) system using Fhenix. By integrating Time-based One-Time Passwords (TOTP) and Fully Homomorphic Encryption (FHE), we provide a secure and decentralized method for user authentication and transaction authorization without relying on centralized servers.
 
-**_Note:_** The Project is not complete with smooth UI. OTP Randomness is pseudo. UI is not complete.
+**_Note:_** The Project is not complete with smooth UI. UI integration has problems. OTP Randomness and generation is pseudo. UI is not complete. Contracts are not the best version.
 
 ---
 
