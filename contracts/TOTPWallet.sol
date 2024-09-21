@@ -36,10 +36,9 @@ contract TOTPWallet is EIP712 {
 
     /**
      * @dev Initializes the wallet with an encrypted secret key and sets the deployer as the owner.
-     * @param _encryptedSecretKey The encrypted secret key for TOTP generation and validation.
      */
-    constructor(bytes memory _encryptedSecretKey) EIP712("TOTPWallet", "1") {
-        encryptedSecretKey = FHE.asEuint32(_encryptedSecretKey);
+    constructor() EIP712("TOTPWallet", "1") {
+        //encryptedSecretKey = FHE.asEuint32(1234);
         owner = msg.sender;
     }
 

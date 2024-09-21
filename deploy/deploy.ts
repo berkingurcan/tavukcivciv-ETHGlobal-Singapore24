@@ -43,12 +43,9 @@ const func: DeployFunction = async function () {
   console.log(`Counter contract: `, counter.address);
   console.log(`Two Factor Auth Contract: `, twoFactorAuth.address)
 
-  const _encryptedSecretKey = fhenixjs.encrypt_uint32(123456789);
-  const encryptedSecretKey = toUtf8Bytes(_encryptedSecretKey)
-
   const TOTPWallet = await deploy("TOTPWallet", {
     from: signer.address,
-    args: [encryptedSecretKey],
+    args: [],
     log: true,
     skipIfAlreadyDeployed: false,
   })

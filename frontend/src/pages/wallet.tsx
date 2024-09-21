@@ -2,21 +2,22 @@
 import { useState, useEffect } from "react";
 import styles from "../styles/Wallet.module.css";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { FhenixClient, fhenixjs } from 'fhenixjs';
+import { FhenixClient, fhenixjs, getPermit } from 'fhenixjs';
 import { ethers } from "ethers";
 import TOPTWallet from "../../../artifacts/contracts/TOTPWallet.sol/TOTPWallet.json"
 
-import { toUtf8Bytes, parseEther,  } from "ethers"
+import { toUtf8Bytes, parseEther, BrowserProvider, toBigInt, getAddress } from "ethers"
 
 const TOTPWalletABI = TOPTWallet.abi
 const TOPTWalletByteCode = TOPTWallet.bytecode
+const TOPTWalletAddress = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0"
 
 export default function Wallet() {
   const [account, setAccount] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [timestamp, setTimestamp] = useState<string>("0");
   const [address, setAddress] = useState<string>("0x");
-  const [value, setValue] = useState<string>("0");
+  const [value, setValue] = useState<string>("");
   const [secretKey, setSecretKey] = useState<string>("");
   const [otp, setOtp] = useState<string>("");
   const [walletContractAddress, setWalletContractAddress] = useState<string>("");
@@ -41,61 +42,49 @@ export default function Wallet() {
     setOtp(event.target.value);
   };
 
-  async function deployWallet() {
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    const signer = await provider.getSigner();
-    const factory = new ethers.ContractFactory(TOTPWalletABI, TOPTWalletByteCode, signer);
-    // const fhenixClient = new FhenixClient({ provider });
-    console.log('FhenixClient initialized');
 
-    const encryptedSecretKey = toUtf8Bytes(secretKey);
-    console.log(encryptedSecretKey)
-    const contract = await factory.deploy(encryptedSecretKey);
-    console.log(contract)
-    setWalletContractAddress((await contract.getAddress()).toString())
-    console.log('Contract instance created: ', await contract.getAddress());
+  async function deployWallet() {
+    if (typeof window.ethereum !== 'undefined') {
+      const provider = new BrowserProvider(window.ethereum);
+      
+      console.log(provider)
+      const signer = await provider.getSigner();
+      console.log(signer)
+      const factory = new ethers.ContractFactory(TOTPWalletABI, TOPTWalletByteCode, signer);
+
+      const encryptedSecretKey = toUtf8Bytes(secretKey);
+      console.log(encryptedSecretKey)
+      const contract = await factory.deploy(encryptedSecretKey, {
+          gasLimit: 6000000000,
+      });
+      console.log(contract)
+      setWalletContractAddress((await contract.getAddress()).toString())
+      console.log('Contract instance created: ', await contract.getAddress());
+    } else {
+      console.error('Ethereum wallet not detected');
+      throw new Error('Ethereum wallet not detected');
+    }
   }
 
   async function sendTransaction() {
     const provider = new ethers.BrowserProvider(window.ethereum);
     const signer = await provider.getSigner();
     await provider.send("eth_requestAccounts", []);
-    const contract = new ethers.Contract(walletContractAddress, TOTPWalletABI, signer);
-
+    const contract = new ethers.Contract(TOPTWalletAddress, TOTPWalletABI, signer);
 
     const tx = await contract.executeTransaction(
-        address,
+        getAddress(address),
         parseEther(value),
-        otp,
-        timestamp
+        toUtf8Bytes(otp),
+        toBigInt(timestamp)
     );
-  }
-
-  function submitOtp() {
-    return
+    tx.wait()
   }
 
   return (
     <div>
     <main className={styles.container}>
         <ConnectButton />
-
-      <h2 className={styles.heading}>Deploy Your Smart Contract Wallet</h2>
-      <div className={styles.inputGroup}>
-        <input
-          type="text"
-          placeholder="Secret Key"
-          className={styles.inputField}
-          value={secretKey}
-          onChange={handleSecretKeyChange}
-        />
-        <button
-          className={`${styles.button} ${styles.deployButton}`}
-          onClick={deployWallet}
-        >
-          DEPLOY
-        </button>
-      </div>
 
       <div className={styles.inputGroup}>
         <input
@@ -107,17 +96,12 @@ export default function Wallet() {
         />
         <input
           type="text"
-          placeholder="Enter Value ETH"
+          placeholder="Enter Value TFHE"
           className={styles.inputField}
           value={value}
           onChange={handleValue}
         />
-        <button
-          className={`${styles.button} ${styles.sendButton}`}
-          onClick={sendTransaction}
-        >
-          SEND {value} ETH
-        </button>
+        
       </div>
 
       <div className={styles.inputGroup}>
@@ -136,10 +120,10 @@ export default function Wallet() {
           onChange={handleTimestamp}
         />
         <button
-          className={`${styles.button} ${styles.otpButton}`}
-          onClick={submitOtp}
+          className={`${styles.button} ${styles.sendButton}`}
+          onClick={sendTransaction}
         >
-          SUBMIT OTP
+          SEND {value} TFHE
         </button>
       </div>
 
