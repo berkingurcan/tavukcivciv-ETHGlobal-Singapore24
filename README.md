@@ -15,14 +15,8 @@
   - [Registration Phase](#registration-phase)
   - [Login Phase](#login-phase)
   - [Transaction Execution Phase](#transaction-execution-phase)
-- [Business Logic](#business-logic)
-- [UI/UX Flow](#uiux-flow)
-  - [1. Registration Flow](#1-registration-flow)
-  - [2. Login Flow](#2-login-flow)
-  - [3. Second Signer Approval Flow](#3-second-signer-approval-flow)
-  - [4. OTP Generation and Verification Flow](#4-otp-generation-and-verification-flow)
-  - [5. Transaction Execution Flow](#5-transaction-execution-flow)
-  - [6. Frontend](#6-frontend)
+- [Future Improvements](#future-enhancements)
+- [Frontend](#frontend)
 - [Installation and Usage](#installation-and-usage)
 - [Conclusion](#conclusion)
 - [License](#license)
@@ -139,129 +133,53 @@ The project consists of three main smart contracts:
 2. **Validation and Execution**:
    - The contract validates the OTP using FHE.
    - If valid, the transaction is executed, and a `TransactionExecuted` event is emitted.
+   - The validation logic:
+   ```js
+    euint32 encryptedMultiplication = FHE.mul(encryptedSecretKey, encryptedTimeStep);
+    euint32 encryptedDivision = FHE.div(encryptedMultiplication, FHE.asEuint32(1000000));
+    euint32 encryptedModulo = FHE.sub(encryptedMultiplication, FHE.mul(encryptedDivision, FHE.asEuint32(1000000)));
+
+    euint32 encryptedProvidedTOTP = FHE.asEuint32(_encryptedTOTP);
+
+    ebool comparisonResult = FHE.eq(encryptedModulo, encryptedProvidedTOTP);
+
+    isValid = FHE.decrypt(comparisonResult);
+   ```
 
 ---
 
-## Business Logic
+## Future Enhancements
 
-- **Security Enhancement**: By requiring approvals from two separate addresses and encrypted OTPs, the system significantly reduces unauthorized access risks.
+- **Confidentiality via FHE**: By requiring approvals from two separate addresses and encrypted OTPs, the system significantly reduces unauthorized access risks. Use sealing and eaddress for confidentality.
 
-- **Decentralization**: All authentication processes occur on-chain, aligning with blockchain's trustless and decentralized principles.
+- **Decentralization**: All authentication processes need to be on-chain like random OTP's etc. aligning with blockchain's trustless and decentralized principles.
 
-- **User Empowerment**: Users have full control over their authentication mechanisms and can update settings as needed.
-
-- **Confidentiality via FHE**: Utilizing FHE ensures sensitive data like OTPs remains confidential, even during on-chain processing.
+- **UI/UX Empowerment**: Implement flawless and smooth UI
 
 - **Scalability**: The modular design allows for future enhancements and integrations, such as additional authentication factors.
 
 ---
 
-## UI/UX Flow
 
-### 1. Registration Flow
+## Frontend
 
-**User Interface Elements**:
+Includes 3 Pages for simplicity:
 
-- **Connect Wallet Button**: To connect the primary Ethereum wallet.
-- **Second Signer Address Input**: Field to input the second signer's Ethereum address.
-- **Time Interval Input**: Field to set the approval time window (in seconds).
-- **Register Button**: To submit registration details.
+- Homepage:
+![Homepage](./screenshots/homepage.png)
+- Wallet:
+![Wallet](./screenshots/wallet.png)
+- 2FA APP:
+![2FA APP](./screenshots/otp.png)
 
-**User Experience Flow**:
 
-1. **Access Registration Page**: User navigates to the registration section of the dApp.
-
-2. **Connect Primary Wallet**: User clicks "Connect Wallet" and approves the connection.
-
-3. **Enter Details**:
-   - Inputs the second signer's address.
-   - Sets the approval time interval.
-
-4. **Submit Registration**:
-   - Clicks "Register" to invoke the `register()` function.
-   - Receives a confirmation message upon success.
-
-### 2. Login Flow
-
-**User Interface Elements**:
-
-- **Login Button**: To initiate the login request.
-- **Status Messages**: Displays current status (e.g., "Awaiting second signer approval").
-
-**User Experience Flow**:
-
-1. **Initiate Login**:
-   - Clicks "Login" to call `requestApproval()`.
-   - Status message indicates awaiting approval.
-
-2. **Await Approval**:
-   - Monitors status updates based on emitted events.
-
-### 3. Second Signer Approval Flow
-
-**User Interface Elements**:
-
-- **Connect Wallet Button**: For the second signer.
-- **Pending Approvals List**: Displays pending login requests.
-- **Approve Button**: To approve a login request.
-
-**User Experience Flow**:
-
-1. **Notification**: Second signer receives an alert about the pending approval.
-
-2. **Connect Wallet**: Navigates to the dApp and connects their wallet.
-
-3. **View Pending Requests**: Sees a list of pending approvals.
-
-4. **Approve Request**:
-   - Selects the request and clicks "Approve".
-   - Calls `approve()` with the primary user's address.
-   - Receives a confirmation message.
-
-### 4. OTP Generation and Verification Flow
-
-**User Interface Elements**:
-
-- **Generate OTP Button**: To create and encrypt the OTP.
-- **Verify OTP Button**: To verify the encrypted OTP.
-- **Status Messages**: Indicates process status.
-
-**User Experience Flow**:
-
-1. **Generate Encrypted OTP**:
-   - Clicks "Generate OTP" to call `generateEncryptedOTP()`.
-   - Receives a status update confirming OTP generation.
-
-2. **Verify Encrypted OTP**:
-   - Clicks "Verify OTP" to call `verifyEncryptedOTP()`.
-   - Upon success, a "Login Successful" message is displayed.
-
-### 5. Transaction Execution Flow
-
-**User Interface Elements**:
-
-- **Recipient Address Input**: Field for recipient's Ethereum address.
-- **Amount Input**: Field to specify the amount to send.
-- **Execute Transaction Button**: To initiate the transaction.
-- **Status Messages**: Displays transaction outcomes.
-
-**User Experience Flow**:
-
-1. **Input Transaction Details**:
-   - Enters recipient address and amount.
-
-2. **Execute Transaction**:
-   - Clicks "Execute Transaction" to call `executeTransaction()`.
-   - Provides necessary parameters, including the encrypted OTP.
-
-3. **Confirmation**:
-   - Upon success, transaction details and confirmations are displayed.
-
-### 6. Frontend
-
-Explain Frontend with ss
 
 ---
 
 ## Installation and Usage
 
+The project is built on [Fhenix Hardhat Template](https://github.com/FhenixProtocol/fhenix-hardhat-example)
+
+- Use instructions [here](https://github.com/FhenixProtocol/fhenix-hardhat-example?tab=readme-ov-file#quick-start).
+- You need to have running Docker to run the local testnet.
+- Front end is Rainbow Kit Template, the front end readme file and instructions is [here](./frontend/README.md)
