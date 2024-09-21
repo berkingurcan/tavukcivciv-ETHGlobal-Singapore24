@@ -87,7 +87,7 @@ export default function TwoFactorAuth() {
     function generateOTP(secretKey: any, timeInterval = 300) {
         const timestamp = Math.floor(Date.now() / 1000);
         const timeStep = Math.floor(timestamp / timeInterval);
-        const otp = (secretKey * timeStep) % 1000000;
+        const otp = (secretKey * timeStep) % 10000;
     
         return otp.toString().padStart(4, '0');
     }

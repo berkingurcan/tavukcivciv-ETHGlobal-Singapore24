@@ -59,7 +59,7 @@ The project consists of three main smart contracts:
 
 - **User Struct**: Stores user information such as primary and secondary addresses, approval times, and status.
 - **Functions**:
-  - `register()`: Registers the primary and secondary addresses along with the approval time interval.
+  - `register()`: Registers the primary and secondary addresses along with the approval time interval of the OTP.
   - `requestApproval()`: Primary user initiates a login request.
   - `approve()`: Second signer approves the login request within the specified time interval.
   - `login()`: Primary user completes the login process after approval.
@@ -70,7 +70,7 @@ The project consists of three main smart contracts:
 
 ### 2. TOTPWallet.sol
 
-**Purpose**: A smart contract wallet that uses TOTP for transaction authorization, leveraging FHE for secure on-chain processing of OTPs.
+**Purpose**: A simple smart contract wallet for demonstration that uses TOTP for transaction authorization, leveraging FHE for secure on-chain processing of OTPs.
 
 **Key Components**:
 
