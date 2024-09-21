@@ -25,29 +25,6 @@ export default function TwoFactorAuth() {
     const [otpCode, setOtpCode] = useState('');
     const [timeLeft, setTimeLeft] = useState(totp.options.period);
 
-    useEffect(() => {
-        // Function to generate OTP
-        const generateOTP = () => {
-          const code = totp.generate(SECRET_KEY);
-          setOtpCode(code);
-        };
-    
-        // Generate OTP on component mount
-        generateOTP();
-    
-        // Update OTP and countdown every second
-        const interval = setInterval(() => {
-          const remaining = totp.options.period as number; - Math.floor(Date.now() / 1000) % (totp.options.period as number);
-          setTimeLeft(remaining);
-    
-          if (remaining === totp.options.period) {
-            generateOTP();
-          }
-        }, 1000);
-    
-        return () => clearInterval(interval);
-      }, []);
-
     async function handleRegister() {
         const provider = new ethers.BrowserProvider(window.ethereum);
         const signer = await provider.getSigner();
@@ -104,15 +81,6 @@ export default function TwoFactorAuth() {
         }
     }
 
-    const SECRET_KEY = '1234';
-
-    // Configure the TOTP options
-    totp.options = {
-        digits: 4,      // Number of digits in the OTP
-        period: 300,     // Time period in seconds
-        algorithm: "sha1", // Hash algorithm
-    };
-
     async function verifyOtp() {
         return
     }
@@ -121,7 +89,7 @@ export default function TwoFactorAuth() {
         const timeStep = Math.floor(timestamp / timeInterval);
         const otp = (secretKey * timeStep) % 1000000;
     
-        return otp.toString().padStart(6, '0');
+        return otp.toString().padStart(4, '0');
     }
     
     async function requestOtp() {
@@ -139,7 +107,7 @@ export default function TwoFactorAuth() {
 
             const secretKey = 123456; // Example secret key
             const otp = generateOTP(secretKey);
-            console.log('Your OTP is:', otp);
+            setOtpCode(otp)
         } catch (error: any) {
             console.error('Error approving:', error);
             setError(error.message);
