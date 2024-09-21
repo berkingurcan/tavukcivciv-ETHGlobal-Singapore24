@@ -1,0 +1,134 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    background-color: #f9fafb;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    margin: 2rem auto;
+  }
+  
+  .heading {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-bottom: 1.5rem;
+    color: #0d76fc;
+  }
+  
+  .inputGroup {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 1rem;
+  }
+  
+  .inputField {
+    padding: 0.75rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1rem;
+    background-color: #ffffff;
+    transition: border-color 0.2s;
+  }
+  
+  .inputField:focus {
+    border-color: #0d76fc;
+    outline: none;
+  }
+  
+  .button {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #ffffff;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+  
+  .connectButton {
+    background-color: #0d76fc;
+  }
+  
+  .connectButton:hover {
+    background-color: #0b5ec1;
+  }
+  
+  .registerButton {
+    background-color: #0d76fc;
+  }
+  
+  .registerButton:hover {
+    background-color: #0b5ec1;
+  }
+  
+  .otpButton {
+    background-color: #4a5568;
+  }
+  
+  .otpButton:hover {
+    background-color: #2d3748;
+  }
+  
+  .approveButton {
+    background-color: #38a169;
+  }
+
+  .otpDisplay {
+    text-align: center;
+    margin: 20px 0;
+  }
+  
+  .otpCode {
+    font-size: 48px;
+    font-weight: bold;
+    letter-spacing: 4px;
+  }
+  
+  .timer {
+    font-size: 16px;
+    color: #666;
+  }
+  
+  .approveButton:hover {
+    background-color: #2f855a;
+  }
+  
+  .loginButton {
+    background-color: #0d76fc;
+  }
+  
+  .loginButton:hover {
+    background-color: #0b5ec1;
+  }
+  
+  .error {
+    color: #e53e3e;
+    margin-top: 1rem;
+    font-weight: bold;
+  }
+  
+  @media (max-width: 600px) {
+    .container {
+      padding: 1.5rem;
+      max-width: 100%;
+    }
+  
+    .inputField {
+      font-size: 0.9rem;
+    }
+  
+    .button {
+      font-size: 0.9rem;
+    }
+  }
+  
+  

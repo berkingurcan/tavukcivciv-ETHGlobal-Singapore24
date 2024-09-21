@@ -40,7 +40,7 @@ contract TwoFactorAuthTOTP {
         twoFactorAuth = TwoFactorAuth(_twoFactorAuthAddress);
     }
 
-/**
+    /**
      * @dev Generates an encrypted OTP using the same algorithm as TOTPWallet's validateTOTP function.
      * @notice This function should be called by the user who wants to log in.
      */
