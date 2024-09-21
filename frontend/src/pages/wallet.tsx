@@ -1,6 +1,7 @@
 "use client"
 import { useState, useEffect } from "react";
 import styles from "../styles/Wallet.module.css";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 export default function Wallet() {
   const [account, setAccount] = useState<string | null>(null);
@@ -41,9 +42,9 @@ export default function Wallet() {
   return (
     <div>
     <main className={styles.container}>
-      <h2 className={styles.heading}>Deploy Your Smart Contract Wallet</h2>
-      <p className="text-lg font-semibold">Connected Account: {account}</p>
+        <ConnectButton />
 
+      <h2 className={styles.heading}>Deploy Your Smart Contract Wallet</h2>
       <div className={styles.inputGroup}>
         <input
           type="text"
