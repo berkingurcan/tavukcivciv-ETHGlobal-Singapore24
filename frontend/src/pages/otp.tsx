@@ -5,6 +5,7 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import TwoFactorAuthJSON from "../../../artifacts/contracts/TwoFactorAuth.sol/TwoFactorAuth.json"
 import TwoTOTP from "../../../artifacts/contracts/TwoFactorAuthTOTP.sol/TwoFactorAuthTOTP.json"
 import { ethers, getAddress, toBigInt } from "ethers";
+import { totp } from 'otplib';
 
 const TwoFactorAuthABI = TwoFactorAuthJSON.abi
 const TwoFactorAuthADDRESS = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"
@@ -21,7 +22,31 @@ export default function TwoFactorAuth() {
     const [otpRequested, setOtpRequested] = useState<boolean>(false);
     const [approvalGranted, setApprovalGranted] = useState<boolean>(false);
     const [primaryAddress, setPrimaryAddress] = useState<string>("");
+    const [otpCode, setOtpCode] = useState('');
+    const [timeLeft, setTimeLeft] = useState(totp.options.period);
 
+    useEffect(() => {
+        // Function to generate OTP
+        const generateOTP = () => {
+          const code = totp.generate(SECRET_KEY);
+          setOtpCode(code);
+        };
+    
+        // Generate OTP on component mount
+        generateOTP();
+    
+        // Update OTP and countdown every second
+        const interval = setInterval(() => {
+          const remaining = totp.options.period as number; - Math.floor(Date.now() / 1000) % (totp.options.period as number);
+          setTimeLeft(remaining);
+    
+          if (remaining === totp.options.period) {
+            generateOTP();
+          }
+        }, 1000);
+    
+        return () => clearInterval(interval);
+      }, []);
 
     async function handleRegister() {
         const provider = new ethers.BrowserProvider(window.ethereum);
@@ -79,8 +104,24 @@ export default function TwoFactorAuth() {
         }
     }
 
+    const SECRET_KEY = '1234';
+
+    // Configure the TOTP options
+    totp.options = {
+        digits: 4,      // Number of digits in the OTP
+        period: 300,     // Time period in seconds
+        algorithm: "sha1", // Hash algorithm
+    };
+
     async function verifyOtp() {
         return
+    }
+    function generateOTP(secretKey: any, timeInterval = 300) {
+        const timestamp = Math.floor(Date.now() / 1000);
+        const timeStep = Math.floor(timestamp / timeInterval);
+        const otp = (secretKey * timeStep) % 1000000;
+    
+        return otp.toString().padStart(6, '0');
     }
     
     async function requestOtp() {
@@ -95,13 +136,15 @@ export default function TwoFactorAuth() {
             const tx = await contract.generateEncryptedOTP();
             await tx.wait();
             console.log(tx)
+
+            const secretKey = 123456; // Example secret key
+            const otp = generateOTP(secretKey);
+            console.log('Your OTP is:', otp);
         } catch (error: any) {
             console.error('Error approving:', error);
             setError(error.message);
         }
-    }
-
-    
+    } 
 
 
     return (
@@ -166,6 +209,12 @@ export default function TwoFactorAuth() {
                 >
                     GENERATE OTP
                 </button>
+            </div>
+            {/* OTP Display */}
+            <div className={styles.otpDisplay}>
+            <h3>Your OTP Code:</h3>
+            <div className={styles.otpCode}>{otpCode}</div>
+            <div className={styles.timer}>Expires in: {timeLeft}s</div>
             </div>
             {error && <p className={styles.error}>{error}</p>}
         </main>
