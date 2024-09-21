@@ -54,7 +54,11 @@ contract TwoFactorAuthTOTP {
         uint32 otp = uint32(pseudoRandom);
 
         // Encrypt the OTP using FHE
-        bytes memory encryptedOTP = FHE.inEuint32(otp).data;
+        bytes memory encryptedOTP = new bytes(4); // uint32 takes 4 bytes
+
+        assembly {
+            mstore(add(encryptedOTP, 32), otp)
+        }
 
         // Store the encrypted OTP
         encryptedOTPs[msg.sender] = encryptedOTP;

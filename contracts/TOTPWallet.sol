@@ -88,15 +88,15 @@ contract TOTPWallet is EIP712 {
         require(block.timestamp <= uint256(_timestamp) + TOTP_VALIDITY, "TOTPWallet: Timestamp expired");
         require(_timestamp <= block.timestamp, "TOTPWallet: Invalid future timestamp");
 
-        // Calculate the time step (e.g., 30-second intervals)
-        uint32 timeStep = _timestamp / 30;
+        // Calculate the time step (e.g., 300-second intervals)
+        uint32 timeStep = _timestamp / 300;
         euint32 encryptedTimeStep = FHE.asEuint32(timeStep);
 
         // Compute the expected TOTP using FHE operations
         // expectedTOTP = (secretKey * timeStep) % 1000000
         euint32 encryptedMultiplication = FHE.mul(encryptedSecretKey, encryptedTimeStep);
-        euint32 encryptedDivision = FHE.div(encryptedMultiplication, FHE.asEuint32(1000000));  // Division
-        euint32 encryptedModulo = FHE.sub(encryptedMultiplication, FHE.mul(encryptedDivision, FHE.asEuint32(1000000)));  // Modulo operation
+        euint32 encryptedDivision = FHE.div(encryptedMultiplication, FHE.asEuint32(1000000));
+        euint32 encryptedModulo = FHE.sub(encryptedMultiplication, FHE.mul(encryptedDivision, FHE.asEuint32(1000000)));
 
         euint32 encryptedProvidedTOTP = FHE.asEuint32(_encryptedTOTP);
 
