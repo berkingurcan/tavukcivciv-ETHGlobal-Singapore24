@@ -2,8 +2,19 @@
 import { useState, useEffect } from "react";
 import styles from "../styles/Wallet.module.css";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { useAccount, useSigner } from "wagmi"; // Using wagmi hooks for account and signer
+import { FhenixClient } from 'fhenixjs';
+import { ethers } from "ethers";
+import TOPTWallet from "../../../artifacts/contracts/TOTPWallet.sol/TOTPWallet.json"
+
+import { toUtf8Bytes } from "ethers"
+
+const TOTPWalletABI = TOPTWallet.abi
 
 export default function Wallet() {
+
+    const { userAddress, isConnected } = useAccount();
+    const { data: signer } = useSigner();
   const [account, setAccount] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [address, setAddress] = useState<string>("0x");
@@ -28,7 +39,8 @@ export default function Wallet() {
   };
 
   function deployWallet() {
-    return
+    const encryptedSecretKey = toUtf8Bytes(secretKey);
+
   }
 
   function sendTransaction() {
